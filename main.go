@@ -24,8 +24,9 @@ type Context struct {
 }
 
 type BrowserlessParameters struct {
-	Code    string  `json:"code"`
-	Context Context `json:"context"`
+	Code     string  `json:"code"`
+	Context  Context `json:"context"`
+	Detached bool    `json:"detached"`
 }
 
 type CallbackParameters struct {
@@ -56,14 +57,16 @@ func sendRequest() {
 	}
 
 	// Read the browserless code into mem
-	browserlessFunction, fileErr := os.ReadFile("verizon-login.json")
+	browserlessFunction, fileErr := os.ReadFile("verizon-login.js")
 	if fileErr != nil {
 		log.Fatal("Failed to read browserlesscode Bailing")
 	}
 
 	hostname, err := os.Hostname()
 	if err != nil {
-		panic(err)
+		log.Print(err)
+		log.Print("Error getting hostname, using localhost")
+		hostname = "localhost"
 	}
 
 	// build the context for the functioncall
@@ -74,10 +77,13 @@ func sendRequest() {
 		SecretAnswer: string(verizonQuestionAnswerBytes),
 	}
 
+	log.Printf("Callback url: %s", context.CallbackUrl)
+
 	// build the parameter object
 	parameter := BrowserlessParameters{
-		Code:    string(browserlessFunction),
-		Context: context,
+		Code:     string(browserlessFunction),
+		Context:  context,
+		Detached: true,
 	}
 
 	jsonparameters, _ := json.Marshal(parameter)
