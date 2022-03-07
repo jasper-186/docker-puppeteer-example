@@ -16,6 +16,13 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
+type Config struct {
+	VerizonAccount  string `json:"verizon_account"`
+	VerizonPassword string `json:"verizon_password"`
+	VerizonSecret   string `json:"verizon_secret"`
+	BrowserlessHost string `json:"browserless_host"`
+}
+
 type Context struct {
 	CallbackUrl  string `json:"callbackurl"`
 	Username     string `json:"username"`
@@ -37,24 +44,20 @@ type CallbackParameters struct {
 // Verizon URL To Call
 //https://myvprepay.verizon.com/prepaid/ui/mobile/index.html#/user/landing
 func sendRequest() {
-	browserlessHost := os.Getenv("BROWSERLESSHOST")
-	browserlessUrl := fmt.Sprintf("https://%s/function", browserlessHost)
-
-	// Verizon Credentials from Secrets
-	verizonUserBytes, fileErr := os.ReadFile("/run/secrets/verizon_account")
-	if fileErr != nil {
-		log.Fatal("Failed to read verizon account from secret (verizon_account)")
+	configFile, configErr := os.Open("/config/config")
+	if configErr != nil {
+		log.Fatal("Failed to read browserlesscode Bailing")
 	}
 
-	verizonPasswordBytes, fileErr := os.ReadFile("/run/secrets/verizon_password")
-	if fileErr != nil {
-		log.Fatal("Failed to read verizon password from secret (verizon_password)")
-	}
+	// defer the closing of our jsonFile so that we can parse it later on
+	defer configFile.Close()
 
-	verizonQuestionAnswerBytes, fileErr := os.ReadFile("/run/secrets/verizon_question_answer")
-	if fileErr != nil {
-		log.Fatal("Failed to read verizon secret answer from secret (verizon_password)")
-	}
+	byteValue, _ := ioutil.ReadAll(configFile)
+
+	var config Config
+	json.Unmarshal([]byte(byteValue), &config)
+
+	browserlessUrl := fmt.Sprintf("https://%s/function", config.BrowserlessHost)
 
 	// Read the browserless code into mem
 	browserlessFunction, fileErr := os.ReadFile("verizon-login.js")
@@ -72,9 +75,9 @@ func sendRequest() {
 	// build the context for the functioncall
 	context := Context{
 		CallbackUrl:  fmt.Sprintf("https://%s:8080/verizoncallback", hostname),
-		Username:     string(verizonUserBytes),
-		Password:     string(verizonPasswordBytes),
-		SecretAnswer: string(verizonQuestionAnswerBytes),
+		Username:     config.VerizonAccount,
+		Password:     config.VerizonPassword,
+		SecretAnswer: config.VerizonSecret,
 	}
 
 	log.Printf("Callback url: %s", context.CallbackUrl)
@@ -123,7 +126,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Page content is empty", http.StatusBadRequest)
 		}
 
-		filename := fmt.Sprintf("/output/page_%s.html", time.Now().UTC().Format("2006_01_02_03_04"))
+		filename := fmt.Sprintf("/config/output/page_%s.html", time.Now().UTC().Format("2006_01_02_03_04"))
 		fileErr := os.WriteFile(filename, []byte(dat.PageContent), 0644)
 		if fileErr != nil {
 			log.Print(fileErr)
