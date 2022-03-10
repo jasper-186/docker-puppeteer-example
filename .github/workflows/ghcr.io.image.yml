@@ -7,7 +7,7 @@ on:
     branches: [ main ]
 
 env:
-  IMAGE_NAME: docker-puppeteer-example
+  IMAGE_NAME: verizon-data-available
 
 jobs:
 
