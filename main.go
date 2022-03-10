@@ -103,9 +103,9 @@ func sendRequest() {
 func verizonhandler(w http.ResponseWriter, r *http.Request) {
 	// Handle the POST Request with the <i>data</i>   heheheheheh
 	// Currently just write it to a timestamped file in /output
-
 	switch r.Method {
 	case "POST":
+		log.Print("Callback Received")
 		var dat CallbackParameters
 		// check that its a valid callback
 		if r.Body == nil {
@@ -135,7 +135,7 @@ func verizonhandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, fileErr.Error(), http.StatusInternalServerError)
 		}
 	default:
-		fmt.Fprintf(w, "Sorry, Only POST methods are supported.")
+		log.Print("Sorry, Only POST methods are supported for the callback.")
 		http.Error(w, "Sorry, Only POST methods are supported.", http.StatusBadRequest)
 	}
 }
@@ -152,7 +152,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		}()
 		fmt.Fprintf(w, "Sent Request to Verizon")
 	default:
-		fmt.Fprintf(w, "Sorry, Only POST methods are supported.")
+		log.Print("Sorry, Only GET methods are supported for the Manual.")
 		http.Error(w, "Sorry, Only POST methods are supported.", http.StatusBadRequest)
 	}
 }
