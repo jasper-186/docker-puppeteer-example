@@ -20,7 +20,7 @@ type Config struct {
 	VerizonAccount  string `json:"verizon_account"`
 	VerizonPassword string `json:"verizon_password"`
 	VerizonSecret   string `json:"verizon_secret"`
-	BrowserlessHost string `json:"browserless_host"`
+	BrowserlessUrl  string `json:"browserless_url"`
 }
 
 type Context struct {
@@ -57,7 +57,7 @@ func sendRequest() {
 	var config Config
 	json.Unmarshal([]byte(byteValue), &config)
 
-	browserlessUrl := fmt.Sprintf("https://%s/function", config.BrowserlessHost)
+	browserlessUrl := fmt.Sprintf("%s/function", config.BrowserlessUrl)
 
 	// Read the browserless code into mem
 	browserlessFunction, fileErr := os.ReadFile("verizon-login.js")
@@ -74,7 +74,7 @@ func sendRequest() {
 
 	// build the context for the functioncall
 	context := Context{
-		CallbackUrl:  fmt.Sprintf("https://%s:8080/verizoncallback", hostname),
+		CallbackUrl:  fmt.Sprintf("http://%s:8080/verizoncallback", hostname),
 		Username:     config.VerizonAccount,
 		Password:     config.VerizonPassword,
 		SecretAnswer: config.VerizonSecret,
