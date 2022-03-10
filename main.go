@@ -139,7 +139,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 			log.Printf("Sending request to Verizon - Manually")
 			sendRequest()
 		}()
-
+		fmt.Fprintf(w, "Sent Request to Verizon")
 	default:
 		fmt.Fprintf(w, "Sorry, Only POST methods are supported.")
 		http.Error(w, "Sorry, Only POST methods are supported.", http.StatusBadRequest)
