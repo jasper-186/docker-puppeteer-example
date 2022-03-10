@@ -1,4 +1,4 @@
-module ghcr.io/jasper-186/docker-puppeteer-example
+module ghcr.io/jasper-186/verizon-data-available
 
 go 1.17
 
