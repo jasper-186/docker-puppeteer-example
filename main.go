@@ -126,12 +126,19 @@ func handler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Page content is empty", http.StatusBadRequest)
 		}
 
+		os.MkdirAll("/config/output", os.ModePerm)
+
 		filename := fmt.Sprintf("/config/output/page_%s.html", time.Now().UTC().Format("2006_01_02_03_04"))
 		fileErr := os.WriteFile(filename, []byte(dat.PageContent), 0644)
 		if fileErr != nil {
 			log.Print(fileErr)
 			http.Error(w, fileErr.Error(), http.StatusInternalServerError)
 		}
+	case "GET":
+		go func() {
+			log.Printf("Sending request to Verizon - Manually")
+			sendRequest()
+		}()
 
 	default:
 		fmt.Fprintf(w, "Sorry, Only POST methods are supported.")
@@ -166,7 +173,8 @@ func main() {
 			case <-done:
 				return
 			case t := <-ticker.C:
-				log.Printf("%s - sending request to Verizon", t)
+				log.Printf("ticker fired at %s", t)
+				log.Print("Sending request to Verizon - Ticker")
 				sendRequest()
 			}
 		}

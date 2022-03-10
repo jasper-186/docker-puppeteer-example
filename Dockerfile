@@ -11,7 +11,6 @@ COPY go.sum ./
 RUN go mod download
 
 COPY *.go ./
-COPY *.js ./
 RUN go build -o ./server.out
 
 ##
@@ -22,6 +21,7 @@ RUN apk update
 WORKDIR /
 
 COPY --from=build /app/server.out /server.out
+COPY *.js /
 
 EXPOSE 8080
 
