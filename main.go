@@ -100,7 +100,7 @@ func sendRequest() {
 	defer resp.Body.Close()
 }
 
-func handler(w http.ResponseWriter, r *http.Request) {
+func verizonhandler(w http.ResponseWriter, r *http.Request) {
 	// Handle the POST Request with the <i>data</i>   heheheheheh
 	// Currently just write it to a timestamped file in /output
 
@@ -134,6 +134,17 @@ func handler(w http.ResponseWriter, r *http.Request) {
 			log.Print(fileErr)
 			http.Error(w, fileErr.Error(), http.StatusInternalServerError)
 		}
+	default:
+		fmt.Fprintf(w, "Sorry, Only POST methods are supported.")
+		http.Error(w, "Sorry, Only POST methods are supported.", http.StatusBadRequest)
+	}
+}
+
+func handler(w http.ResponseWriter, r *http.Request) {
+	// Handle the POST Request with the <i>data</i>   heheheheheh
+	// Currently just write it to a timestamped file in /output
+
+	switch r.Method {
 	case "GET":
 		go func() {
 			log.Printf("Sending request to Verizon - Manually")
@@ -147,12 +158,12 @@ func handler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-
+	log.Print("Starting golang server")
 	ctx, cancel := context.WithCancel(context.Background())
 	// setup ticket to make request 1/hour [1/300sec for debug]
 	ticker := time.NewTicker(300 * time.Second)
 	done := make(chan bool)
-
+	log.Print("Listening for graceful shutdown")
 	go func() {
 		// setup for graceful shutdown
 		osStopCall := make(chan os.Signal, 1)
@@ -167,6 +178,7 @@ func main() {
 		cancel()
 	}()
 
+	log.Print("Starting ticker")
 	go func() {
 		for {
 			select {
@@ -181,8 +193,10 @@ func main() {
 	}()
 	//json.NewDecoder(resp.Body).Decode(&serverresult)
 
+	log.Print("Starting HTTP server")
 	// Listen for Callback
-	http.HandleFunc("/verizoncallback", handler)
+	http.HandleFunc("/verizoncallback", verizonhandler)
+	http.HandleFunc("/", handler)
 	httpServer := &http.Server{
 		Addr: ":8080",
 	}
